@@ -1,0 +1,57 @@
+module Org.Kablambda.Extensions;
+
+import Cal.Core.Prelude using
+    dataConstructor = Just, Left, Nothing, Right;
+    typeConstructor = Either, Maybe;
+    ;
+
+import Cal.Core.Functor using
+    typeClass = Functor;
+    ;
+
+import Cal.Core.Monad using
+    typeClass = Monad;
+    ;
+
+public maybe def f m =
+    case m of
+        Just a -> f a;
+        Nothing -> def;
+    ;
+
+maybeToEither :: a -> Maybe b -> Either a b;
+public maybeToEither errorValue = maybe (Left errorValue) (\x -> Right x);
+
+instance Functor (Either a) where
+    map = mapEither;
+    ;
+
+mapEither :: (a -> b) -> Either x a -> Either x b;
+mapEither f e =
+    case e of
+        Left l -> Left l;
+        Right r -> Right $ f r;
+    ;
+
+instance Monad (Either a) where
+    bind = bindEither;
+    anonymousBind = anonymousBindEither;
+    return = returnEither;
+    ;
+
+bindEither :: Either x a -> (a -> Either x b) -> Either x b;
+bindEither e f =
+    case e of
+        Left l -> Left l;
+        Right r -> f r;
+    ;
+
+anonymousBindEither :: Either x a -> Either x b -> Either x b;
+anonymousBindEither ea eb =
+    case ea of
+        Left l -> Left l;
+        Right _ -> eb;
+    ;
+
+returnEither = Right;
+

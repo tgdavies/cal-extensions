@@ -1,0 +1,95 @@
+module Org.Kablambda.Io;
+
+import Cal.Core.Prelude using
+    typeClass = Outputable;
+    typeConstructor = Char, Double, Int, String;
+    function = deepStrict, error, seq;
+    ; 
+import Cal.Core.Char; 
+import Cal.Core.String using
+    function = fromChar;
+    ; 
+import Cal.Core.Functor using 
+    typeClass = Functor; 
+    ; 
+import Cal.Core.Monad using 
+    typeClass = Monad; 
+    function = anonymousBind, bind, return; 
+    ; 
+import Cal.IO.Console using
+    function = print;
+    ; 
+
+data private IOState = private IOState;
+/** 
+ * The monadic data structure. 
+ */ 
+data public IO a = 
+    public IO f :: (IOState -> (IOState,a)); 
+/** 
+ * Functor bindings. 
+ */ 
+instance Functor (IO) where 
+    map = mapIO; 
+    ; 
+/** 
+ * Functor mapping (not used in this example). 
+ */ 
+mapIO :: (a -> b) -> IO a -> IO b; 
+private mapIO mappingFunction !value = 
+    value `bind` (\x -> return $ mappingFunction x) 
+    ; 
+
+unIO m = let IO f = m; in f;
+
+instance Monad (IO) where 
+    bind          = bindIO; 
+    anonymousBind = anonymousBindIO; 
+    return        = returnIO; 
+    ; 
+bindIO :: IO a -> (a -> IO b) -> IO b;
+bindIO m f =
+    let IO mf = m;
+    in
+        IO (\s -> 
+            let
+                (newState, a) = deepStrict mf s;
+            in
+                deepStrict (unIO (f a)) newState
+            );
+
+anonymousBindIO :: IO a -> IO b -> IO b;
+anonymousBindIO a b =
+    let IO fa = a;
+        IO fb = b;
+    in
+        IO (\s ->
+            let (newState, r) = deepStrict fa s;
+            in r `seq` deepStrict fb newState
+            );
+
+returnIO :: a -> IO a;
+returnIO a = IO (\s -> (s,a));
+/** 
+ * Output a string to the console. 
+ * 
+ * @arg str the string. 
+ * @return the Unit value in an IO. 
+ */ 
+putStr :: String -> IO (); 
+public putStr !str = IO (\s -> (s, print str));
+ 
+/** 
+ * Output a character to the console. 
+ * 
+ * @arg ch the character. 
+ * @return the Unit value in an IO. 
+ */ 
+putChar :: Char -> IO (); 
+public putChar !ch = IO (\s -> (s,print (fromChar ch)));
+
+runIO :: IO a -> a;
+public runIO io = let (_,v) = deepStrict (unIO io) IOState; in v;
+
+makeIO :: a -> IO a;
+public makeIO a = IO (\s -> (s,a));
