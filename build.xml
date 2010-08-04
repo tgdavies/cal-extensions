@@ -1,1 +1,38 @@
-nothing yet...
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="cal-extensions" default="package">
+    <description>
+            Extensions to the CAL library
+    </description>
+
+	<property name="quark.dir" location="${user.home}/dev/tools/cal-1.7.1" />
+	<path id="quark">
+		<pathelement location="src"/>
+		<pathelement location="${quark.dir}/Quark/bin/cal/debug"/>
+		<fileset dir="${quark.dir}/Quark/bin/java/release">
+			        <include name="**/calLibraries.jar" />
+			        <include name="**/calPlatform.jar" /> <!-- maybe don't need? -->
+			        <include name="**/calRuntime.jar" />
+			        <include name="**/calUtilities.jar" />
+			      </fileset>
+			      <fileset dir="${quark.dir}/Quark/lib/Resources/External/java/">
+			        <include name="**/*.jar" />
+			      </fileset>
+	</path>
+    <target name="package" description="Build a car-jar for this library">
+    	<mkdir dir="target"/>
+        <java classname="org.openquark.cal.services.CarTool" classpathref="quark">
+        	<arg line="cal-extensions.cws"/>
+        	<arg line="-keepsource"/>
+        	<arg line="-jar"/>
+        	<arg line="target"/>
+        </java>
+    </target>
+
+    <!-- - - - - - - - - - - - - - - - - - 
+          target: depends                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="depends">
+    </target>
+
+</project>
